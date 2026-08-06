@@ -39,3 +39,54 @@ WHERE CompanyName LIKE 'S%' AND Country = 'Mexico';
 -- 9. ข้อมูลที่มีตำแหน่งของผู้ที่ประสานงานเป็น Manager
 select * from Customers
 where ContactTitle like '%Manager%';
+ 
+ --Aggregate Funtion (หรือเรียกว่า Group FUntion)
+ --เป็น Funtion ที่คำนวณมาจากข้อมูลหลายแถว
+select top (5) * from products
+
+select Count(*) as จำนวนชนิด,Max(UnitPrice) as ราคาสูงสุด,
+Min(UnitPrice) as ราคาต่ำสุด,Avg(UnitPrice) as ราคาเฉลี่ย,Sum(UnitsInStock) as ราคารวมทั้งหมด
+from Products
+
+--ต้องการทราบว่าสินค้าแต่ละหมวดหมู่(CategoryID) มีสินค้ากี่ชนิด แต่ละชนิดมีราคาเฉลี่ย มีราคาสูงสุด และต่ำสุด
+select  CategoryID ,Count(*) จำนวนชนิด ,Avg(UnitPrice) ราคาเฉลี่ย, Max(UnitPrice) ราาคาสูงสุด , Min(UnitPrice)  ราคาต่ำสุด
+from products
+Group by CategoryID
+
+--ต้องการทราบว่าข้อมูลในแต่ละประเทศ (Country) มีลูกค้าอยู่กี่ราย
+select Country, City, Count(*) จำนวนลูกค้า
+from Customers
+group by Country ,City
+order by Country asc ,count(*) desc
+--	order by Count(*) desc
+--	order by Count(*) desc
+
+--ต้องการทราบว่าข้อมูลในแต่ละประเทศ (Country) แสดงเฉพาะที่มีลูกค้า 10 รายขึ้นไป
+select Country, Count(*) จำนวนลูกค้า
+from Customers
+group by Country
+having count(*) >= 10
+
+--ต้องการทราบว่าสินค้าที่มีมูลค้าสูง (ราคาตั่งแต่ 75 ขึ้นไป) แต่ละหมวดหมู่มีจำนวนกี่ชนิด มีราคาเฉลี่ยเท่าใด
+--ให้แสดงเฉพาะสินค้าที่มีราคาเฉลี่ย มากกว่า 200
+select categoryID, count(*)  จำนวนชนิด ,avg(UnitPrice) ราาคเฉลี่ย
+from Products
+where UnitPrice >=75
+group by  CategoryID
+having avg(unitprice) > 200
+
+--จากตาราง [Order Details] ให้รวบรวมว่าในแต่ละการสั่งซื้อ มียอดรวมเท่าใด
+select orderID, UnitPrice, Quantity,Discount,
+	   UnitPrice * Quantity as ราคาเต็ม,
+	   UnitPrice * Quantity * Discount as ส่วนลด,
+	   (UnitPrice * Quantity) - (UnitPrice * Quantity * Discount) ราคาหักส่วนลดแล้ว,
+	   (UnitPrice * Quantity * (1 - Discount)) as หักส่วนลดสูตรย่อ
+from [Order Details]
+
+select orderID, count(*) จำนวนรายการ,
+	   sum((UnitPrice * Quantity * (1 - Discount))) as total
+from [Order Details]
+group by orderID
+having  sum((UnitPrice * Quantity * (1 - Discount))) > 2000
+order by 3 desc
+--order by sum((UnitPrice * Quantity * (1 - Discount))) desc
