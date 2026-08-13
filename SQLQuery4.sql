@@ -110,3 +110,72 @@ from Orders o inner join Employees e on o.EmployeeID = e.EmployeeID
 where year(o.OrderDate) = 1997
 group by o.OrderID,o.OrderDate,e.FirstName,e.LastName,c.CompanyName,s.CompanyName
 order by [ยอดรวมในใบสั่งซื้อ] desc;
+
+--ต้องการ รหัสสินค้า ชื่อสินค้า จำนวนที่ขายได้ เฉพาะสนค้าที่ขายดีที่สุด 5 อันดับแรก ในปี 1997
+select top 5 p.ProductID,
+       p.ProductName,
+       sum(od.Quantity) as [จำนวนที่ขายได้]
+from Products p inner join [Order Details] od on p.ProductID = od.ProductID
+                inner join Orders o on od.OrderID = o.OrderID
+where year(o.OrderDate) = 1997
+group by p.ProductID,p.ProductName
+order by [จำนวนที่ขายได้] desc;
+
+--ข้อมูลลูกค้า ชื่อบริษัทลูกค้า และประเทศลูกค้า ที่ซื้อสินค้าที่มาขากบริษัทชื่อ Exotic Liquids   ออกสอบ
+select distinct c.CustomerID,
+       c.CompanyName,
+       c.Country
+from Customers c inner join Orders o on c.CustomerID = o.CustomerID
+                 inner join [Order Details] od on o.OrderID = od.OrderID
+                 inner join Products p on od.ProductID = p.ProductID
+                 inner join Suppliers s on p.SupplierID = s.SupplierID
+where s.CompanyName = 'Exotic Liquids'
+order by c.CompanyName;
+--ชื่อบริษัทลูกค้าที่มีหมวดหมู่ Seafood       ออกสอบ
+select distinct c.CompanyName
+from Customers c inner join Orders o on c.CustomerID = o.CustomerID
+                 inner join [Order Details] od on o.OrderID = od.OrderID
+                 inner join Products p on od.ProductID = p.ProductID
+                 inner join Categories ca on p.CategoryID = ca.CategoryID
+where ca.CategoryName = 'Seafood'
+order by c.CompanyName;
+-- sub Query (Query ซ้อนกัน)
+-- ชื่อหนักงานที่มีตำแหน่งเดียวกับ Nancy (nancy ตำแหน่งอะไร)
+select FirstName + space(2) + LastName as [ชื่อพนักงาน],
+       Title as [ตำแหน่ง]
+from Employees
+where Title = (select Title
+               from Employees
+               where FirstName = 'Nancy');
+-- ชื่อพนักงานที่มีอายุน้อยกว่า Robert (Robert เกิดเมื่อใด)
+select FirstName + space(2) + LastName as [ชื่อพนักงาน],
+       BirthDate as [วันเกิด]
+from Employees
+where BirthDate > (select BirthDate
+                   from Employees
+                   where FirstName = 'Robert');
+--วันเกิด Robert
+select BirthDate as [วันเกิด]
+from Employees
+where FirstName = 'Robert';
+-- รหัสสินค้า ชื่อสินค้า ที่มีราคาสูงกว่าค่าเฉลี่ยทั้งหมดของราคาสินค้า  (ค่าเฉลี่ยของราคาสินค้าคืออะไร)
+select ProductID,
+       ProductName,
+       UnitPrice,
+       (select avg(UnitPrice)
+        from Products) as [ค่าเฉลี่ยราคาสินค้า]
+from Products
+where UnitPrice > (select avg(UnitPrice)
+                   from Products);
+-- ชื่อ นามสกุล พนักงานที่ อายุมากที่สุด
+select FirstName + space(2) + LastName as [ชื่อ-นามสกุล],
+       BirthDate as [วันเกิด]
+from Employees
+where BirthDate = (select min(BirthDate)
+                   from Employees);
+-- ชื่อ นามสกุล พนักงานที่ เข้าทำงานหลังสุด
+select FirstName + space(2) + LastName as [ชื่อ-นามสกุล],
+       HireDate as [วันที่เข้าทำงาน]
+from Employees
+where HireDate = (select max(HireDate)
+                  from Employees);
