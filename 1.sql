@@ -83,6 +83,36 @@ JOIN [Order Details] od ON o.OrderID = od.OrderID
 GROUP BY e.EmployeeID;
 
 
+-- กำหนดข้อมูลที่จะนำมาแสดงผล
+SELECT 
+    c.CompanyName AS [ชื่อลูกค้า], -- ดึงชื่อบริษัทลูกค้ามาแสดง
+    SUM(od.Quantity) AS [จำนวนชิ้นรวม], -- หาผลรวมจำนวนชิ้นของสินค้าที่ซื้อ
+    
+    -- จัดรูปแบบยอดรวมสุทธิให้แสดงผลเป็นทศนิยม 2 ตำแหน่งสวยๆ ด้วย CAST
+    CAST(SUM(od.Quantity * (od.UnitPrice * (1 - od.Discount))) AS DECIMAL(10,2)) AS [ยอดรวมสุทธิ]
+    
+-- กำหนดตารางหลักที่ใช้ดึงข้อมูล (ตั้งชื่อย่อให้ตารางเพื่อความสะดวก)
+FROM Customers c -- ตารางข้อมูลลูกค้า (ย่อเป็น c)
+
+-- เชื่อมตารางต่างๆ เข้าด้วยกันด้วยรหัสที่ตรงกัน (Primary Key = Foreign Key)
+JOIN Orders o ON c.CustomerID = o.CustomerID -- เชื่อมตารางใบสั่งซื้อ เพื่อดึงข้อมูลประเทศที่จัดส่ง
+JOIN [Order Details] od ON o.OrderID = od.OrderID -- เชื่อมตารางรายละเอียดคำสั่งซื้อ เพื่อดึงจำนวน ราคา และส่วนลด
+JOIN Products p ON od.ProductID = p.ProductID -- เชื่อมตารางสินค้า เพื่อดึงรหัสหมวดหมู่สินค้า
+JOIN Categories cat ON p.CategoryID = cat.CategoryID -- เชื่อมตารางหมวดหมู่สินค้า เพื่อดึงชื่อหมวดหมู่
+
+-- กรองข้อมูลตามเงื่อนไขที่ต้องการ
+WHERE cat.CategoryName = 'Seafood' -- เงื่อนไขที่ 1: เอาเฉพาะสินค้าในหมวด 'Seafood' (อาหารทะเล)
+  AND o.ShipCountry = 'USA' -- เงื่อนไขที่ 2: เอาเฉพาะรายการที่ส่งไปยังประเทศ 'USA'
+
+-- จัดกลุ่มข้อมูลเพื่อให้ฟังก์ชัน SUM() ทำงานได้ถูกต้อง
+GROUP BY 
+    c.CustomerID, -- จัดกลุ่มตามรหัสลูกค้า (ป้องกันกรณีชื่อลูกค้าซ้ำกัน)
+    c.CompanyName -- จัดกลุ่มตามชื่อลูกค้า เพื่อนำไปแสดงผลในบรรทัด SELECT
+
+-- จัดเรียงลำดับผลลัพธ์ที่แสดงออกมา
+ORDER BY 
+    [ยอดรวมสุทธิ] DESC; -- เรียงลำดับจากลูกค้าที่มียอดซื้อสูงที่สุดไปหาต่ำที่สุด (DESC = Descending)
+
 
 
 ----------tao
